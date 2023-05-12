@@ -7,6 +7,12 @@ declare global {
   }
 }
 
+interface Script {
+  src: string;
+  position: HTMLElement
+}
+
+
 const loadScript = (src: string, position: HTMLElement) => {
   const script = document.createElement('script');
   script.src = src;
@@ -14,7 +20,15 @@ const loadScript = (src: string, position: HTMLElement) => {
   position.appendChild(script);
 };
 
-let AtlasPay: any;
+export interface Atlas {
+  onClose: () => any
+  onResponse: () => any
+  init: (ref: string) => any
+  onSuccess: () => any
+  shutdown: () => any
+  onLoad: () => any
+}
+let AtlasPay: Atlas;
 
 
 function useAtlasPay(tref?: string) {
@@ -44,9 +58,11 @@ function useAtlasPay(tref?: string) {
 
     if (typeof window !== undefined) {
       AtlasPay = window.AtlasPaySdk
-      const scriptPosition = document.body;
-      const scriptSrc = "https://unpkg.com/atlas-pay-sdk";
-      loadScript(scriptSrc, scriptPosition);
+      const script: Script = {
+        src: 'https://unpkg.com/atlas-pay-sdk',
+        position: document.body
+      };
+      loadScript(script.src, script.position);
     }
     console.log(ref)
 

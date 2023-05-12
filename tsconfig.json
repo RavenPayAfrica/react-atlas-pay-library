@@ -4,12 +4,15 @@
     "module": "esnext",
     "jsx": "react",
     "sourceMap": true,
-    "outDir": "dist",
+    "outDir": "dist/es5",
     "strict": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "declarationDir": "dist/types",
     "forceConsistentCasingInFileNames": true,
   }
 }
