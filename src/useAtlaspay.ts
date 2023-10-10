@@ -46,75 +46,50 @@ function useAtlasPay(tref?: string) {
   const [event, setEvent] = useState<any>(null)
   const [ref, setRef] = useState<any>(tref ? tref : null)
 
-  async function pay(config: {
-    customer_email: string,
-    description: string,
-    merchant_ref: string,
-    amount: string | number,
+  const loadScript = (src: string, position: HTMLElement) => {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = reject;
+      position.appendChild(script);
+    });
+  }
+
+  function pay(config: {
+    customer_email?: string,
+    description?: string,
+    merchant_ref?: string,
+    amount?: string | number,
     redirect_url?: string,
     payment_methods?: string,
-    secret_key: string
+    secret_key?: string,
+    trx_ref?: string,
+    shutdown?: boolean
   }) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        if (typeof window !== 'undefined') {
+          window.AtlasPaySdk = window.AtlasPaySdk || {};
 
-    if (typeof window !== undefined) {
-      AtlasPay = window.AtlasPaySdk
-      const script: Script = {
-        src: 'https://unpkg.com/atlas-pay-sdk',
-        position: document.body
-      };
-      loadScript(script.src, script.position);
-    }
-    console.log(ref)
+          if (!window.AtlasPaySdk.init) {
+            const script = {
+              src: 'https://unpkg.com/atlas-pay-sdk',
+              position: document.body,
+            };
+            await loadScript(script.src, script.position);
+          }
 
-    // if (ref) {
-    //   //listen for response;
-    //   AtlasPay.init(ref)
-    //   const trigger = async (data?: any) => {
-    //     setRef(data?.data?.trx_ref)
-    //     await ref;
-    //     AtlasPay = window.AtlasPaySdk
-    //     const e = {
-    //       type: 'onLoad',
-    //       message: 'Atlas Pay loaded'
-    //     }
-    //     setEvent(e)
+          if (config?.trx_ref) {
+            window.AtlasPaySdk.init(config.trx_ref);
+          } else if(config.shutdown === true){
+            AtlasPay = await window.AtlasPaySdk
+            AtlasPay.shutdown();
+          } else {
+            window.AtlasPaySdk.generate(config);
+          }
 
-    //     //listen for onload
-    //     window.AtlasPaySdk.onLoad = async function (data: any) {
-    //       let load;
-    //       await load;
-    //       AtlasPay = window.AtlasPaySdk
-    //       setEvent(data)
-    //       // console.log(data)
-    //     }
-    //     // listen for onclose
-    //     window.AtlasPaySdk.onClose = async function (data: any) {
-    //       let close;
-    //       await close;
-    //       AtlasPay.shutdown()
-    //       AtlasPay = window.AtlasPaySdk
-    //       setEvent(data)
-    //       // console.log(data)
-    //     }
-
-    //     // listen for onSuccess
-    //     window.AtlasPaySdk.onSuccess = async function (data: any) {
-    //       let event;
-    //       await event;
-    //       AtlasPay = window.AtlasPaySdk
-    //       setEvent(data)
-    //       // console.log(data)
-    //     }
-    //   }
-
-    //   trigger();
-
-    // } else {
-    // }
-
-    window.AtlasPaySdk.generate(config)
-
-    //listen for response;
+          //listen for response;
     window.AtlasPaySdk.onResponse = async function (data: any) {
       setRef(data?.data?.trx_ref)
       let ref2 = (data?.data?.trx_ref)
@@ -128,37 +103,51 @@ function useAtlasPay(tref?: string) {
         AtlasPay.init(ref2)
       }
       setEvent(e)
-
-      //listen for onload
-      window.AtlasPaySdk.onLoad = async function (data: any) {
-        let load;
-        await load;
-        AtlasPay = window.AtlasPaySdk
-        setEvent(data)
-        // console.log(data)
-      }
-      // listen for onclose
-      window.AtlasPaySdk.onClose = async function (data: any) {
-        let close;
-        await close;
-        AtlasPay.shutdown()
-        AtlasPay = window.AtlasPaySdk
-        setEvent(data)
-        // console.log(data)
-      }
-
-      // listen for onSuccess
-      window.AtlasPaySdk.onSuccess = async function (data: any) {
-        let event;
-        await event;
-        AtlasPay = window.AtlasPaySdk
-        setEvent(data)
-        // console.log(data)
-      }
     }
+          //listen for onload
+          window.AtlasPaySdk.onLoad = async function (data: any) {
+            let load;
+            await load;
+            AtlasPay = window.AtlasPaySdk
+            setEvent(data)
+            resolve(data)
 
+            // console.log(data)
+          }
+          // listen for onclose
+          window.AtlasPaySdk.onClose = async function (data: any) {
+            await window.AtlasPaySdk
+            if(window.AtlasPaySdk){
+            AtlasPay = await window.AtlasPaySdk
+              AtlasPay.shutdown();
 
+            }
+            setEvent(data)
+            resolve(data)
+            // console.log(data)
+          }
+
+          // listen for onSuccess
+          window.AtlasPaySdk.onSuccess = async function (data: any) {
+            let event;
+            await event;
+            AtlasPay = window.AtlasPaySdk
+            setEvent(data)
+            // console.log(data)
+            resolve(data)
+          }
+          // ... more of your code ...
+        } else {
+          reject('Window not available');
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
+
+
+
 
   return [pay, event]
 }

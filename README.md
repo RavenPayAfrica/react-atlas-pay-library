@@ -31,12 +31,12 @@ yarn add react-atlas-pay
 ## Usage :
 
 React Atlas Pay Uses normal react Conventions and Exposes for you a `useAtlasPay` Hook, below is an example usage
-```js
 
+```js
 import { useEffect, useState } from 'react'
 import useAtlasPay from 'react-atlas-pay'
 
-export default function App () {
+export default function App() {
   const [pay, atlasEvent] = useAtlasPay()
 
   // The useAtlasPay hook works similar to react useState, you can call the pay or atlasEvent handler anything you wish
@@ -48,7 +48,7 @@ export default function App () {
     amount: 100,
     redirect_url: '',
     payment_methods: 'card,bank_transfer,ussd,raven',
-    secret_key: 'your_atlas_secret_key'
+    public_key: 'your_atlas_public_key',
   }
 
   /**
@@ -68,24 +68,42 @@ export default function App () {
     }
 
     if (atlasEvent.type === 'onSuccess') {
-      // do something here if the payment was successful
+      // do something here if the payment was successful i.e you can forcefully shutdown the payment window on successful payment, by default the payment window remains open on successful payment
+
+      pay({ shutdown: true })
     }
   }, [atlasEvent])
 
   return (
-    <div onClick={() => { pay(config) }} className="">
+    <div
+      onClick={() => {
+        pay(config)
+      }}
+      className=""
+    >
       Pay Button
-      {/* Clicking on this button initializes the payment window */}
+      {/* Clicking on this button will generate a payment request and initializes the payment window */}
     </div>
   )
 }
-
 ```
 
+If you don't need to generate a new payment request, 'i.e already have a payment reference', you can initialize the payment window directly py parsing the `trx_ref` as shown below.
+
+```js
+<div
+  onClick={() => {
+    pay({ trx_ref: 'your_payment_reference' })
+  }}
+  className=""
+>
+  {/* Clicking on this button will generate a payment request and initializes the payment window */}
+</div>
+```
 
 React Atlas Pay Library can also be used in a NextJS Environment but requires extra configuration, AtlasPay offers `AtlasNext` which is NextJS Wrapper for AtlasPay to make use of this you need to call it either within your `_app.tsx` or `_document.tsx` this can be found in your nextjs `src` folder, below is an example usage;
 
-``` js
+```js
 
 import { Manrope } from "@next/font/google";
 import type { AppProps } from "next/app";
@@ -111,11 +129,10 @@ export default function App({ Component, pageProps }: AppProps) {
 }
 
 ```
+
 ## License
 
 AtlasPay by Raven bank is licensed under the [**MIT**](http://opensource.org/licenses/MIT)
-
-
 
 [npm-url]: https://www.npmjs.com/package/raven-bank-ui
 [npm-image]: https://img.shields.io/npm/v/my-react-typescript-package
@@ -123,5 +140,4 @@ AtlasPay by Raven bank is licensed under the [**MIT**](http://opensource.org/lic
 [github-license-url]: https://github.com/gapon2401/my-react-typescript-package/blob/master/LICENSE
 [github-build]: https://github.com/gapon2401/my-react-typescript-package/actions/workflows/publish.yml/badge.svg
 [github-build-url]: https://github.com/gapon2401/my-react-typescript-package/actions/workflows/publish.yml
-
 [npm-typescript]: https://img.shields.io/npm/types/my-react-typescript-package
